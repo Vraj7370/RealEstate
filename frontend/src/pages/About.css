@@ -1,0 +1,61 @@
+.about-page { overflow-x: hidden; }
+
+/* Hero */
+.about-hero {
+  background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+  padding: 96px 0 80px; position: relative; overflow: hidden;
+}
+.about-hero::before {
+  content: ''; position: absolute; top: -40px; right: -80px;
+  width: 500px; height: 500px; border-radius: 50%;
+  background: rgba(201,168,76,0.06); pointer-events: none;
+}
+.about-hero-content { max-width: 640px; }
+.about-hero-content .section-eyebrow { margin-bottom: 12px; }
+.about-hero-content h1 { font-size: clamp(34px,4.5vw,54px); color: white; margin-bottom: 20px; line-height: 1.15; }
+.about-hero-content p  { font-size: 16px; color: rgba(255,255,255,0.65); line-height: 1.75; margin-bottom: 32px; max-width: 520px; }
+.about-hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+
+/* Stats */
+.about-stats-section { background: var(--navy); padding: 0; }
+.about-stats-grid { display: grid; grid-template-columns: repeat(4,1fr); }
+.about-stat-card { padding: 36px 24px; text-align: center; border-right: 1px solid rgba(255,255,255,0.08); }
+.about-stat-card:last-child { border-right: none; }
+.about-stat-value { font-family: var(--font-display); font-size: 40px; font-weight: 700; color: var(--gold); line-height: 1; margin-bottom: 8px; }
+.about-stat-label { font-size: 13px; color: rgba(255,255,255,0.55); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* Mission */
+.about-mission { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+.about-mission-img { border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-xl); aspect-ratio: 4/3; }
+.about-mission-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.about-mission-text h2 { font-size: 34px; margin-bottom: 16px; }
+.about-mission-text p  { color: var(--text-body); font-size: 15px; line-height: 1.75; margin-bottom: 14px; }
+.about-mission-highlights { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.mh-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--text-body); }
+.mh-check { width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+
+/* Values */
+.value-card { background: white; border-radius: var(--radius-lg); padding: 28px 24px; border: 1px solid var(--border-light); box-shadow: var(--shadow-xs); transition: var(--transition-slow); }
+.value-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); border-color: var(--gold-light); }
+.value-icon { font-size: 28px; margin-bottom: 14px; color: var(--gold); }
+.value-card h3 { font-size: 18px; margin-bottom: 8px; }
+.value-card p  { font-size: 13px; color: var(--text-light); line-height: 1.65; }
+
+/* Team */
+.team-card { border-radius: var(--radius-lg); overflow: hidden; background: white; border: 1px solid var(--border-light); box-shadow: var(--shadow-xs); transition: var(--transition-slow); }
+.team-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+.team-img-wrap { aspect-ratio: 1; overflow: hidden; }
+.team-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.5s var(--ease); }
+.team-card:hover .team-img-wrap img { transform: scale(1.05); }
+.team-info { padding: 16px 18px; }
+.team-info h3 { font-size: 16px; margin-bottom: 3px; }
+.team-info p  { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* CTA */
+.about-cta { background: linear-gradient(135deg, var(--gold) 0%, #B8973D 100%); padding: 80px 0; text-align: center; }
+.about-cta h2 { font-size: clamp(26px,3vw,38px); color: white; margin-bottom: 12px; }
+.about-cta p  { color: rgba(255,255,255,0.75); font-size: 15px; margin-bottom: 32px; }
+.about-cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+@media (max-width: 1024px) { .about-stats-grid { grid-template-columns: repeat(2,1fr); } .about-stat-card { border-bottom: 1px solid rgba(255,255,255,0.08); } }
+@media (max-width: 768px)  { .about-mission { grid-template-columns: 1fr; gap: 32px; } .about-hero { padding: 60px 0; } }

@@ -1,0 +1,14 @@
+const jwt = require('jsonwebtoken');
+
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
+};
+
+const sendTokenResponse = (user, statusCode, res, message = 'Success') => {
+  const token = generateToken(user._id);
+  const userObj = user.toObject();
+  delete userObj.password;
+  res.status(statusCode).json({ success: true, message, token, user: userObj });
+};
+
+module.exports = { generateToken, sendTokenResponse };
