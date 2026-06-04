@@ -255,4 +255,4 @@ exports.sendPasswordChangedEmail = async ({ email, firstName }) => {
   });
 };
 
-module.exports = { ...module.exports, sendEmail };
+exports.sendEmail = sendEmail;

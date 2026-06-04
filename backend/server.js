@@ -9,8 +9,6 @@ const path       = require('path');
 const connectDB  = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
-connectDB();
-
 const app = express();
 
 // ── CORS ────────────────────────────────────────────────────
@@ -85,10 +83,17 @@ if (process.env.NODE_ENV === 'production') {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`\n🚀 PropFinder API running on port ${PORT}`);
-  console.log(`📦 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🌐 Client URL:  ${process.env.CLIENT_URL || 'http://localhost:3000'}\n`);
-});
+
+const startServer = async () => {
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`\n🚀 PropFinder API running on port ${PORT}`);
+    console.log(`📦 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🌐 Client URL:  ${process.env.CLIENT_URL || 'http://localhost:3000'}\n`);
+  });
+};
+
+startServer();
 
 module.exports = app;
