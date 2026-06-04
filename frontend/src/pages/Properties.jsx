@@ -3,8 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { propertyAPI } from '../utils/api';
 import PropertyCard from '../components/property/PropertyCard';
 import SearchFilter from '../components/property/SearchFilter';
-import './Properties.css';
-
 const SORT_OPTIONS = [
   { value: 'createdAt-desc', label: 'Newest First' },
   { value: 'price-asc', label: 'Price: Low to High' },
@@ -58,6 +56,8 @@ const Properties = () => {
   const activeFilterCount = Object.keys(filters).filter(k => !['page', 'limit'].includes(k)).length;
 
   return (
+    <>
+      <style>{componentStyles}</style>
     <div className="properties-page">
       <div className="properties-header">
         <div className="container">
@@ -156,7 +156,64 @@ const Properties = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
+
+
+const componentStyles = `/* ══ PROPERTIES LIST PAGE ══ */
+.properties-header {
+  background: white; border-bottom: 1px solid var(--border-light);
+  padding: 20px 0; position: sticky; top: 64px; z-index: 50;
+  box-shadow: var(--shadow-xs);
+}
+.properties-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.properties-header h1 { font-size: 22px; color: var(--text); font-weight: 600; }
+.results-count { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+.header-actions { display: flex; align-items: center; gap: 10px; }
+
+.filter-toggle-btn { position: relative; }
+.filter-badge {
+  background: var(--navy); color: white; border-radius: 50%;
+  width: 16px; height: 16px; font-size: 9px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; margin-left: 5px;
+}
+
+.sort-select {
+  padding: 7px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius); font-size: 13px; font-weight: 500;
+  color: var(--text-body); outline: none; background: white; cursor: pointer;
+}
+.sort-select:focus { border-color: var(--navy); }
+
+.filter-panel { background: var(--bg); border-bottom: 1px solid var(--border-light); padding: 18px 0; }
+
+.properties-content { padding: 28px 0 64px; }
+
+/* Active filters */
+.active-filters { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-bottom: 20px; }
+
+.active-filter-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; background: var(--primary-light);
+  color: var(--navy); border-radius: 100px;
+  font-size: 11px; font-weight: 600; border: 1px solid rgba(15,45,82,0.15);
+}
+.active-filter-tag button { background: none; border: none; color: var(--navy); cursor: pointer; font-size: 12px; padding: 0; line-height: 1; }
+.clear-all-btn { background: none; border: none; color: var(--danger); font-size: 12px; font-weight: 600; cursor: pointer; margin-left: auto; }
+
+/* Skeleton */
+.properties-skeleton { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.skeleton-card { background: white; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-light); }
+.skeleton-img  { height: 185px; background: linear-gradient(90deg, #f0f2f5 25%, #e4e8ed 50%, #f0f2f5 75%); background-size: 400% 100%; animation: shimmer 1.4s infinite; }
+.skeleton-body { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.skeleton-line { height: 11px; background: linear-gradient(90deg, #f0f2f5 25%, #e4e8ed 50%, #f0f2f5 75%); background-size: 400% 100%; animation: shimmer 1.4s infinite; border-radius: 4px; }
+.w-40 { width: 40%; } .w-70 { width: 70%; } .w-55 { width: 55%; }
+@keyframes shimmer { to { background-position: -400% 0; } }
+
+@media (max-width: 1024px) { .properties-skeleton { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px)  { .properties-header { position: relative; top: 0; } .properties-skeleton { grid-template-columns: 1fr; } }
+`;
 
 export default Properties;
