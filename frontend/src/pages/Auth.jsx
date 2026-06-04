@@ -81,8 +81,12 @@ export const Login = () => {
     if (!fpEmail.trim()) { toast.error('Please enter your email address'); return; }
     setFpLoading(true);
     try {
-      await authAPI.forgotPassword({ email: fpEmail.trim() });
-      toast.success('OTP sent! Check your inbox (and spam folder).');
+      const { data } = await authAPI.forgotPassword({ email: fpEmail.trim() });
+      if (data.devOtp) {
+        toast.success(`Dev mode — OTP: ${data.devOtp}`, { duration: 30_000 });
+      } else {
+        toast.success('OTP sent! Check your inbox (and spam folder).');
+      }
       setPanel('otp');
       setResendTimer(60); // 60-second resend cooldown
       // Focus first OTP input
@@ -97,8 +101,12 @@ export const Login = () => {
     if (resendTimer > 0) return;
     setFpLoading(true);
     try {
-      await authAPI.forgotPassword({ email: fpEmail.trim() });
-      toast.success('OTP resent! Check your inbox.');
+      const { data } = await authAPI.forgotPassword({ email: fpEmail.trim() });
+      if (data.devOtp) {
+        toast.success(`Dev mode — new OTP: ${data.devOtp}`, { duration: 30_000 });
+      } else {
+        toast.success('OTP resent! Check your inbox.');
+      }
       setResendTimer(60);
       setOtpDigits(['','','','','','']);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);

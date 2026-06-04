@@ -189,24 +189,38 @@ exports.forgotPassword = async (req, res) => {
     if (!user.isActive)
       return res.status(403).json({ success: false, message: 'Account is blocked. Contact support.' });
 
-    // Rate limit: don't allow resend if OTP still valid and recent
+    // Resend cooldown — 60s (matches frontend); after that a new OTP replaces the old one
     const now = Date.now();
+    const OTP_TTL_MS = 10 * 60 * 1000;
+    const RESEND_COOLDOWN_MS = 60 * 1000;
+
     if (user.resetOTPExpire && user.resetOTPExpire > now) {
-      const remaining = Math.ceil((user.resetOTPExpire - now) / 60000);
-      return res.status(429).json({
-        success: false,
-        message: `OTP already sent. Please wait ${remaining} minute(s) before requesting again.`,
-      });
+      const otpSentAt = user.resetOTPExpire - OTP_TTL_MS;
+      const elapsed = now - otpSentAt;
+      if (elapsed < RESEND_COOLDOWN_MS) {
+        const waitSec = Math.ceil((RESEND_COOLDOWN_MS - elapsed) / 1000);
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${waitSec} second(s) before requesting a new OTP.`,
+        });
+      }
     }
 
-    // Generate OTP, store hashed in DB, return plain to send via email
     const otp = user.generateResetOTP();
+
+    // Send email first — only persist OTP after delivery succeeds
+    const mailResult = await sendOTPEmail({
+      email: user.email,
+      firstName: user.firstName,
+      otp,
+    });
     await user.save({ validateBeforeSave: false });
 
-    // Send OTP email
-    await sendOTPEmail({ email: user.email, firstName: user.firstName, otp });
-
-    res.json(GENERIC_SUCCESS);
+    const payload = { ...GENERIC_SUCCESS };
+    if (mailResult?.devFallback && process.env.NODE_ENV === 'development') {
+      payload.devOtp = otp;
+    }
+    res.json(payload);
   } catch (err) {
     console.error('Forgot password error:', err);
     res.status(500).json({ success: false, message: 'Failed to send OTP. Please try again.' });

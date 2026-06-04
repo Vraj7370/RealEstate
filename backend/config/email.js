@@ -1,50 +1,90 @@
 const nodemailer = require('nodemailer');
 
+const isEmailConfigured = () =>
+  Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+
 // ─────────────────────────────────────────────────────────────
 // Create transporter — supports Gmail + any SMTP provider
+// Port 587 (STARTTLS) is used for Gmail — more reliable than 465 on some networks.
 // ─────────────────────────────────────────────────────────────
 const createTransporter = () => {
-  // Gmail shortcut
+  if (!isEmailConfigured()) return null;
+
+  const auth = {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  };
+
+  const common = {
+    auth,
+    connectionTimeout: 15_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 20_000,
+  };
+
   if (process.env.EMAIL_SERVICE === 'gmail') {
     return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,   // 16-char App Password
-      },
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      ...common,
     });
   }
 
-  // Generic SMTP (Mailgun, SendGrid, Zoho, Office365, etc.)
+  const port = Number(process.env.EMAIL_PORT) || 587;
   return nodemailer.createTransport({
-    host:   process.env.EMAIL_HOST,
-    port:   Number(process.env.EMAIL_PORT) || 587,
-    secure: Number(process.env.EMAIL_PORT) === 465, // true for 465, false for 587
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    tls: { rejectUnauthorized: false },
+    host: process.env.EMAIL_HOST,
+    port,
+    secure: port === 465,
+    ...common,
+    tls: { rejectUnauthorized: process.env.NODE_ENV === 'production' },
   });
+};
+
+let cachedTransporter = null;
+const getTransporter = () => {
+  if (!cachedTransporter) cachedTransporter = createTransporter();
+  return cachedTransporter;
 };
 
 // ─────────────────────────────────────────────────────────────
 // Send email helper — used by all email functions
+// In development, logs to console if SMTP is missing or fails.
 // ─────────────────────────────────────────────────────────────
-const sendEmail = async ({ to, subject, html, text }) => {
-  const transporter = createTransporter();
+const sendEmail = async ({ to, subject, html, text, devLog }) => {
+  const transporter = getTransporter();
+  const plainText = text || html.replace(/<[^>]*>/g, '');
+
+  if (!transporter) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`📧 [DEV] Email not configured — would send to ${to}: ${subject}`);
+      if (devLog) console.warn(`📧 [DEV] ${devLog}`);
+      return { messageId: 'dev-no-smtp', devFallback: true };
+    }
+    throw new Error('Email is not configured. Set EMAIL_USER and EMAIL_PASS in .env');
+  }
 
   const mailOptions = {
     from: `"${process.env.EMAIL_FROM_NAME || 'PropFinder'}" <${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER}>`,
     to,
     subject,
     html,
-    text: text || html.replace(/<[^>]*>/g, ''), // fallback plain text
+    text: plainText,
   };
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log(`📧 Email sent to ${to} — Message ID: ${info.messageId}`);
-  return info;
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`📧 Email sent to ${to} — Message ID: ${info.messageId}`);
+    return info;
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`📧 [DEV] SMTP failed (${err.code || err.message}) — using console fallback`);
+      if (devLog) console.warn(`📧 [DEV] ${devLog}`);
+      return { messageId: 'dev-smtp-fallback', devFallback: true };
+    }
+    throw err;
+  }
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -222,6 +262,7 @@ exports.sendOTPEmail = async ({ email, firstName, otp }) => {
     to: email,
     subject: `🔐 PropFinder Password Reset OTP — ${otp}`,
     html: emailWrapper(content, `Your PropFinder password reset OTP is: ${otp}. Valid for 10 minutes.`),
+    devLog: `Password reset OTP for ${email}: ${otp} (valid 10 minutes)`,
   });
 };
 
