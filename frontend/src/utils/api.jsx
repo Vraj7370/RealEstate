@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://realestatee-pzqf.onrender.com/api';
 
 const API = axios.create({
   baseURL: BASE_URL,
