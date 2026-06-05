@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -88,7 +89,7 @@ const NotFound = () => (
 // ── App ───────────────────────────────────────
 
 const App = () => (
-  <>
+  <ThemeProvider>
     <style>{componentStyles}</style>
 
   <BrowserRouter>
@@ -153,7 +154,7 @@ const App = () => (
       </Routes>
     </AuthProvider>
   </BrowserRouter>
-  </>
+  </ThemeProvider>
 );
 
 
@@ -492,6 +493,302 @@ img {
   .section    { padding: 56px 0; }
   .section-sm { padding: 36px 0; }
   .container  { padding: 0 16px; }
+}
+
+/* ── Dark Theme Overrides ─────────────────── */
+[data-theme='dark'] {
+  --bg:            #090d16;
+  --bg-card:       #111625;
+  --white:         #111625;
+  --off-white:     #0c101b;
+  --border:        #1f293d;
+  --border-light:  #182030;
+
+  --text:          #f3f4f6;
+  --text-body:     #d1d5db;
+  --text-light:    #9ca3af;
+  --text-muted:    #6b7280;
+
+  --primary-light: #162235;
+  --navy:          #C9A84C;
+  --navy-light:    #FAF5E9;
+  --navy-dark:     #05080e;
+}
+
+[data-theme='dark'] body {
+  background: var(--bg);
+  color: var(--text-body);
+}
+
+[data-theme='dark'] .navbar {
+  background: rgba(17, 22, 37, 0.95);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--border);
+}
+
+[data-theme='dark'] .logo-text {
+  color: var(--text);
+}
+
+[data-theme='dark'] .logo-mark {
+  background: var(--gold);
+}
+
+[data-theme='dark'] .nav-link {
+  color: var(--text-light);
+}
+
+[data-theme='dark'] .nav-link:hover {
+  color: var(--text);
+  background: var(--primary-light);
+}
+
+[data-theme='dark'] .nav-link.active {
+  color: var(--gold);
+}
+
+@media (max-width: 900px) {
+  [data-theme='dark'] .navbar-links {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+  }
+}
+
+[data-theme='dark'] .dropdown-menu {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+[data-theme='dark'] .dropdown-item {
+  color: var(--text-body);
+}
+
+[data-theme='dark'] .dropdown-item:hover {
+  background: var(--primary-light);
+  color: var(--gold);
+}
+
+[data-theme='dark'] .dropdown-divider {
+  background: var(--border);
+}
+
+[data-theme='dark'] .section-sm {
+  background: var(--bg-card) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+[data-theme='dark'] .section {
+  background: var(--bg) !important;
+}
+
+[data-theme='dark'] .type-card {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .type-card:hover {
+  background: var(--primary-light);
+  border-color: var(--gold);
+}
+
+[data-theme='dark'] .type-label {
+  color: var(--text);
+}
+
+[data-theme='dark'] .property-card {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .property-card:hover {
+  border-color: var(--border);
+}
+
+[data-theme='dark'] .property-price {
+  color: var(--gold);
+}
+
+[data-theme='dark'] .property-title {
+  color: var(--text);
+}
+
+[data-theme='dark'] .fav-btn {
+  background: rgba(17, 22, 37, 0.85);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+[data-theme='dark'] .fav-btn:hover {
+  background: var(--bg-card);
+}
+
+[data-theme='dark'] .fav-btn.active {
+  background: #3f1e1e;
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .feature-val {
+  color: var(--text);
+}
+
+[data-theme='dark'] .furnishing-pill {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--text-light);
+}
+
+[data-theme='dark'] .cities-grid .city-overlay {
+  background: linear-gradient(to top, rgba(9,13,22,0.92) 0%, rgba(9,13,22,0.25) 65%, transparent 100%);
+}
+
+[data-theme='dark'] .form-control {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme='dark'] .form-control:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+
+[data-theme='dark'] .form-control::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme='dark'] .card {
+  background: var(--bg-card);
+  border-color: var(--border-light);
+}
+
+[data-theme='dark'] .card:hover {
+  border-color: var(--border);
+}
+
+[data-theme='dark'] .modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+[data-theme='dark'] .modal-header {
+  border-bottom: 1px solid var(--border);
+}
+
+[data-theme='dark'] .modal-close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-theme='dark'] .pagination button {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text-light);
+}
+
+[data-theme='dark'] .pagination button:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+[data-theme='dark'] .pagination button.active {
+  background: var(--gold);
+  color: white;
+  border-color: var(--gold);
+}
+
+[data-theme='dark'] .search-filter {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+}
+
+[data-theme='dark'] .search-filter input,
+[data-theme='dark'] .search-filter select {
+  background: var(--bg) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+
+[data-theme='dark'] .filter-item label {
+  color: var(--text-light) !important;
+}
+
+[data-theme='dark'] .dash-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border-light) !important;
+}
+
+[data-theme='dark'] .dash-table th {
+  background: var(--bg);
+  border-bottom-color: var(--border);
+}
+
+[data-theme='dark'] .dash-table td {
+  border-bottom-color: var(--border-light);
+  color: var(--text-body);
+}
+
+[data-theme='dark'] .dash-table tr:hover td {
+  background: var(--off-white);
+}
+
+[data-theme='dark'] .btn-ghost:hover:not(:disabled) {
+  background: var(--primary-light);
+  color: var(--text);
+}
+
+[data-theme='dark'] .btn-white {
+  background: var(--bg-card);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+[data-theme='dark'] .btn-white:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--gold);
+}
+
+[data-theme='dark'] .btn-outline {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+[data-theme='dark'] .btn-outline:hover:not(:disabled) {
+  background: var(--gold);
+  color: white;
+}
+
+[data-theme='dark'] footer {
+  border-top: 1px solid var(--border) !important;
+}
+
+[data-theme='dark'] .dashboard-sidebar {
+  background: #0b0f19 !important;
+  border-right: 1px solid var(--border);
+}
+
+[data-theme='dark'] .sidebar-user {
+  border-bottom-color: var(--border);
+}
+
+[data-theme='dark'] .sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+[data-theme='dark'] .sidebar-nav-item.active {
+  background: rgba(201, 168, 76, 0.12) !important;
+}
+
+[data-theme='dark'] .dash-page-header h1 {
+  color: var(--text);
+}
+
+[data-theme='dark'] .property-detail-page,
+[data-theme='dark'] .detail-card,
+[data-theme='dark'] .detail-sidebar-card,
+[data-theme='dark'] .detail-amenity-card {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
 }
 `;
 

@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { getInitials, getRoleColor } from '../../utils/helpers';
 import { getNavbarMenu, ROLE_META } from '../../config/roles';
+import { FiSun, FiMoon } from 'react-icons/fi';
 
 const Navbar = () => {
   const { user, logout, permissions, canListProperty } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate  = useNavigate();
   const location  = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -45,6 +48,9 @@ const Navbar = () => {
         </div>
 
         <div className="navbar-actions">
+          <button className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme" title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
+            {theme === 'light' ? <FiMoon /> : <FiSun />}
+          </button>
           {user ? (
             <div className="user-dropdown" ref={dropRef}>
               <button className="user-btn" onClick={() => setDropOpen(d => !d)}>
@@ -261,6 +267,42 @@ const componentStyles = `/* ══ NAVBAR — clean white + navy ══ */
   .navbar-inner { position: relative; }
   .user-btn-text { display: none; }
   .chevron { display: none; }
+}
+
+.theme-toggle-btn {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 18px;
+  padding: 0;
+  outline: none;
+  flex-shrink: 0;
+}
+.theme-toggle-btn:hover {
+  border-color: var(--navy);
+  background: var(--bg);
+  transform: scale(1.05) rotate(15deg);
+  box-shadow: var(--shadow-sm);
+}
+.theme-toggle-btn svg {
+  display: block;
+  transition: transform 0.35s var(--ease);
+}
+.theme-toggle-btn:active svg {
+  transform: scale(0.85);
+}
+[data-theme='dark'] .theme-toggle-btn:hover {
+  border-color: var(--gold);
+  background: var(--primary-light);
+  box-shadow: 0 0 12px rgba(201, 168, 76, 0.25);
 }
 `;
 
