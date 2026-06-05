@@ -88,9 +88,15 @@ const NotFound = () => (
 
 // ── App ───────────────────────────────────────
 
-const App = () => (
-  <ThemeProvider>
-    <style>{componentStyles}</style>
+const App = () => {
+  React.useEffect(() => {
+    const t = setTimeout(() => document.body.classList.add('loaded'), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <ThemeProvider>
+      <style>{componentStyles}</style>
 
   <BrowserRouter>
     <AuthProvider>
@@ -155,7 +161,8 @@ const App = () => (
     </AuthProvider>
   </BrowserRouter>
   </ThemeProvider>
-);
+  );
+};
 
 
 
@@ -789,6 +796,42 @@ img {
   background: var(--bg-card) !important;
   border-color: var(--border) !important;
   color: var(--text) !important;
+}
+
+/* ── Smooth Theme Transitions & Animations ── */
+body.loaded,
+body.loaded .navbar,
+body.loaded .dropdown-menu,
+body.loaded .card,
+body.loaded .property-card,
+body.loaded .form-control,
+body.loaded .type-card,
+body.loaded footer,
+body.loaded .dashboard-sidebar,
+body.loaded .btn,
+body.loaded .dash-card,
+body.loaded .dash-table td,
+body.loaded .theme-toggle-btn {
+  transition: background 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle-btn svg {
+  animation: theme-spin 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes theme-spin {
+  from {
+    transform: rotate(-60deg) scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
 }
 `;
 
