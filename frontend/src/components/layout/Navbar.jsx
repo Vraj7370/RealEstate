@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getInitials, getRoleColor } from '../../utils/helpers';
+import { getNavbarMenu, ROLE_META } from '../../config/roles';
+
 const Navbar = () => {
-  const { user, logout, isAdmin, canListProperty, isSupport } = useAuth();
+  const { user, logout, permissions, canListProperty } = useAuth();
   const navigate  = useNavigate();
   const location  = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,19 +21,19 @@ const Navbar = () => {
 
   const handleLogout = () => { logout(); navigate('/'); };
   const roleColor   = getRoleColor(user?.role);
+  const roleMeta    = ROLE_META[user?.role];
+  const menuItems   = user ? getNavbarMenu(permissions) : [];
 
   return (
     <>
       <style>{componentStyles}</style>
     <nav className="navbar">
       <div className="container navbar-inner">
-        {/* Logo */}
         <Link to="/" className="navbar-logo">
           <div className="logo-mark">🏛</div>
           <span className="logo-text">Prop<span>Finder</span></span>
         </Link>
 
-        {/* Nav links */}
         <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
           <Link to="/properties?listingType=Sale"        className="nav-link">Buy</Link>
           <Link to="/properties?listingType=Rent"        className="nav-link">Rent</Link>
@@ -42,7 +44,6 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Right */}
         <div className="navbar-actions">
           {user ? (
             <div className="user-dropdown" ref={dropRef}>
@@ -52,7 +53,9 @@ const Navbar = () => {
                 </div>
                 <div className="user-btn-text">
                   <span className="user-name">{user.firstName}</span>
-                  <span className="user-role-badge" style={{ color: roleColor }}>{user.role}</span>
+                  <span className="user-role-badge" style={{ color: roleColor }}>
+                    {roleMeta?.label || user.role}
+                  </span>
                 </div>
                 <span className={`chevron ${dropOpen ? 'up' : ''}`}>▾</span>
               </button>
@@ -65,31 +68,22 @@ const Navbar = () => {
                     </div>
                     <div>
                       <p className="dropdown-name">{user.firstName} {user.lastName}</p>
-                      <span className="dropdown-role">{user.role}</span>
+                      <span className="dropdown-role">{roleMeta?.label || user.role}</span>
                     </div>
                   </div>
-                  <div className="dropdown-divider" />
-                  <Link to="/dashboard"         className="dropdown-item">⊞  Dashboard</Link>
-                  <Link to="/dashboard/profile" className="dropdown-item">○  My Profile</Link>
-                  {!isSupport && !isAdmin && <>
-                    <Link to="/dashboard/favorites" className="dropdown-item">♡  Saved</Link>
-                    <Link to="/dashboard/inquiries" className="dropdown-item">◈  Inquiries</Link>
-                    <Link to="/dashboard/visits"    className="dropdown-item">⊡  Visits</Link>
-                  </>}
-                  {canListProperty && <>
-                    <div className="dropdown-divider" />
-                    <Link to="/dashboard/my-properties"  className="dropdown-item">⊟  My Listings</Link>
-                    <Link to="/dashboard/list-property"  className="dropdown-item">+  List Property</Link>
-                    <Link to="/dashboard/owner-inquiries" className="dropdown-item">◈  Received Inquiries</Link>
-                  </>}
-                  {(isSupport || isAdmin) && <>
-                    <div className="dropdown-divider" />
-                    <Link to="/dashboard/support" className="dropdown-item">⊙  Support</Link>
-                  </>}
-                  {isAdmin && <>
-                    <div className="dropdown-divider" />
-                    <Link to="/admin" className="dropdown-item admin-link">⚙  Admin Panel</Link>
-                  </>}
+                  {menuItems.map((item, i) =>
+                    item.divider ? (
+                      <div key={`div-${i}`} className="dropdown-divider" />
+                    ) : (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className={`dropdown-item ${item.adminLink ? 'admin-link' : ''}`}
+                      >
+                        {item.label}
+                      </Link>
+                    )
+                  )}
                   <div className="dropdown-divider" />
                   <button className="dropdown-item logout-item" onClick={handleLogout}>→  Sign Out</button>
                 </div>
@@ -128,7 +122,6 @@ const componentStyles = `/* ══ NAVBAR — clean white + navy ══ */
   height: 64px; gap: 32px;
 }
 
-/* Logo */
 .navbar-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 
 .logo-mark {
@@ -147,7 +140,6 @@ const componentStyles = `/* ══ NAVBAR — clean white + navy ══ */
 
 .logo-text span { color: var(--gold); }
 
-/* Nav links */
 .navbar-links {
   display: flex; align-items: center;
   gap: 2px; flex: 1; justify-content: center;
@@ -171,11 +163,9 @@ const componentStyles = `/* ══ NAVBAR — clean white + navy ══ */
 }
 .nav-link-cta:hover { background: var(--gold); color: white; border-color: var(--gold); }
 
-/* Right actions */
 .navbar-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .auth-buttons   { display: flex; align-items: center; gap: 8px; }
 
-/* User dropdown */
 .user-dropdown { position: relative; }
 
 .user-btn {
@@ -203,7 +193,6 @@ const componentStyles = `/* ══ NAVBAR — clean white + navy ══ */
 .chevron { font-size: 12px; color: var(--text-muted); transition: var(--transition); }
 .chevron.up { transform: rotate(180deg); }
 
-/* Dropdown */
 .dropdown-menu {
   position: absolute; top: calc(100% + 8px); right: 0;
   width: 240px; background: white;
@@ -249,7 +238,6 @@ const componentStyles = `/* ══ NAVBAR — clean white + navy ══ */
 .logout-item { color: var(--danger) !important; }
 .logout-item:hover { background: #FEF2F2 !important; }
 
-/* Hamburger */
 .menu-toggle {
   display: none; flex-direction: column;
   gap: 5px; padding: 8px; background: none; border: none;

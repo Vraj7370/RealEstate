@@ -2,72 +2,17 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getInitials, getRoleColor } from '../../utils/helpers';
-// Nav items per role
-const getNavItems = ({ isAdmin, isOwner, isAgent, isSupport, canListProperty }) => {
-  const common = [
-    { to: '/dashboard',          label: '📊 Overview',         exact: true },
-    { to: '/dashboard/profile',  label: '👤 My Profile' },
-  ];
-
-  const buyerItems = [
-    { to: '/dashboard/favorites',  label: '❤️ Saved Properties' },
-    { to: '/dashboard/inquiries',  label: '💬 My Inquiries' },
-    { to: '/dashboard/visits',     label: '📅 My Visits' },
-    { to: '/dashboard/payments',   label: '💳 Payments' },
-    { to: '/dashboard/support',    label: '🎫 Support Tickets' },
-  ];
-
-  const ownerAgentItems = [
-    { divider: true },
-    { to: '/dashboard/my-properties',   label: '🏘️ My Listings' },
-    { to: '/dashboard/list-property',   label: '➕ List Property' },
-    { to: '/dashboard/owner-inquiries', label: '💬 Received Inquiries' },
-    { to: '/dashboard/owner-visits',    label: '📋 Visit Requests' },
-  ];
-
-  const supportItems = [
-    { divider: true },
-    { to: '/dashboard/support',    label: '🎫 All Support Tickets' },
-  ];
-
-  if (isAdmin) {
-    return [
-      ...common,
-      ...buyerItems,
-      { divider: true },
-      { to: '/dashboard/my-properties',   label: '🏘️ All Properties' },
-      { to: '/dashboard/list-property',   label: '➕ List Property' },
-      { to: '/dashboard/owner-inquiries', label: '💬 Received Inquiries' },
-      { to: '/dashboard/owner-visits',    label: '📋 Visit Requests' },
-      { divider: true },
-      { to: '/admin',                   label: '⚙️ Admin Panel', adminLink: true },
-    ];
-  }
-
-  if (isSupport) {
-    return [
-      ...common,
-      ...supportItems,
-      { to: '/dashboard/inquiries', label: '💬 Inquiries' },
-    ];
-  }
-
-  if (isOwner || isAgent) {
-    return [...common, ...buyerItems, ...ownerAgentItems];
-  }
-
-  // BUYER (default)
-  return [...common, ...buyerItems];
-};
+import { getDashboardNav, ROLE_META } from '../../config/roles';
 
 const DashboardLayout = () => {
-  const { user, logout, isAdmin, isOwner, isAgent, isSupport, canListProperty } = useAuth();
+  const { user, logout, permissions } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const navItems = getNavItems({ isAdmin, isOwner, isAgent, isSupport, canListProperty });
+  const navItems = getDashboardNav(permissions);
+  const roleMeta = ROLE_META[user?.role] || ROLE_META.BUYER;
   const roleColor = getRoleColor(user?.role);
 
   return (
@@ -90,7 +35,7 @@ const DashboardLayout = () => {
           <div className="sidebar-user-info">
             <p className="sidebar-name">{user?.firstName} {user?.lastName}</p>
             <span className="sidebar-role" style={{ background: roleColor + '30', color: roleColor }}>
-              {user?.role}
+              {roleMeta.label}
             </span>
           </div>
         </div>
@@ -98,7 +43,9 @@ const DashboardLayout = () => {
         {/* Nav */}
         <nav className="sidebar-nav">
           {navItems.map((item, i) => {
-            if (item.divider) return <div key={`div-${i}`} className="nav-divider" />;
+            if (item.section) {
+              return <div key={`sec-${i}`} className="nav-section-label">{item.section}</div>;
+            }
             return (
               <NavLink
                 key={item.to}
@@ -170,7 +117,11 @@ const componentStyles = `/* ══ DASHBOARD LAYOUT ══ */
 .sidebar-nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
 .sidebar-nav-item.active { background: rgba(201,168,76,0.15); color: var(--gold-light); font-weight: 600; }
 
-.nav-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 6px 0; }
+.nav-section-label {
+  padding: 14px 12px 6px;
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.2px; color: rgba(255,255,255,0.28);
+}
 
 .admin-nav { color: #C4B5FD !important; }
 .admin-nav:hover { background: rgba(196,181,253,0.1) !important; }

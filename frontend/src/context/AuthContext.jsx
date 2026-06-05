@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { authAPI } from '../utils/api';
+import { getPermissions } from '../config/roles';
 
 const AuthContext = createContext(null);
 
@@ -44,25 +45,25 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  // ── Role helpers ──
-  const isAdmin   = user?.role === 'ADMIN';
-  const isOwner   = user?.role === 'OWNER';
-  const isAgent   = user?.role === 'AGENT';
-  const isBuyer   = user?.role === 'BUYER';
-  const isSupport = user?.role === 'SUPPORT';
+  const permissions = useMemo(() => getPermissions(user?.role), [user?.role]);
+  const {
+    isAdmin, isOwner, isAgent, isBuyer, isSupport,
+    canListProperty, canUseBuyerJourney, canManageLeads,
+    canAccessAdmin, canManageSupport,
+  } = permissions;
 
-  // Combined helpers
-  const canListProperty = isOwner || isAgent || isAdmin;
-  const canApprove      = isAdmin;
-  const canManageUsers  = isAdmin;
-  const canViewSupport  = isAdmin || isSupport;
+  const canApprove = isAdmin;
+  const canManageUsers = isAdmin;
+  const canViewSupport = canManageSupport;
 
   return (
     <AuthContext.Provider value={{
       user, token, loading,
       login, logout, updateUser, fetchUser,
+      permissions,
       isAdmin, isOwner, isAgent, isBuyer, isSupport,
-      canListProperty, canApprove, canManageUsers, canViewSupport,
+      canListProperty, canUseBuyerJourney, canManageLeads,
+      canApprove, canManageUsers, canViewSupport, canAccessAdmin, canManageSupport,
     }}>
       {children}
     </AuthContext.Provider>

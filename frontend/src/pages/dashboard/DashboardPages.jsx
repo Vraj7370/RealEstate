@@ -1,26 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { favoriteAPI, inquiryAPI, visitAPI, paymentAPI, supportAPI } from '../../utils/api';
+import { favoriteAPI, inquiryAPI, visitAPI, paymentAPI, supportAPI, propertyAPI } from '../../utils/api';
 import { formatPrice, formatDate } from '../../utils/helpers';
+import { ROLE_META } from '../../config/roles';
 import toast from 'react-hot-toast';
-// ═══════════════════════════════════════
-// ROLE BADGE COLORS
-// ═══════════════════════════════════════
-const ROLE_META = {
-  ADMIN:   { icon: '👑', color: '#8b5cf6', label: 'Administrator' },
-  OWNER:   { icon: '🏠', color: '#f59e0b', label: 'Property Owner' },
-  AGENT:   { icon: '🤝', color: '#3b82f6', label: 'Real Estate Agent' },
-  BUYER:   { icon: '🛒', color: '#10b981', label: 'Buyer / Tenant' },
-  SUPPORT: { icon: '🎫', color: '#ef4444', label: 'Support Staff' },
-};
 
 // ═══════════════════════════════════════
 // DASHBOARD OVERVIEW
 // ═══════════════════════════════════════
 export const DashboardOverview = () => {
-  const { user, canListProperty, isAdmin, isSupport } = useAuth();
-  const [stats, setStats] = useState({ favorites: 0, inquiries: 0, visits: 0 });
+  const { user, permissions, canListProperty, canUseBuyerJourney, canManageLeads, isAdmin, isSupport, isAgent } = useAuth();
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
 
   const roleMeta = ROLE_META[user?.role] || ROLE_META.BUYER;
@@ -28,43 +19,80 @@ export const DashboardOverview = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [favRes, inqRes, visRes] = await Promise.all([
-          favoriteAPI.getMy(),
-          inquiryAPI.getMy(),
-          visitAPI.getMy(),
-        ]);
-        setStats({
-          favorites: favRes.data.data?.length || 0,
-          inquiries: inqRes.data.data?.length || 0,
-          visits:    visRes.data.data?.length || 0,
-        });
+        if (canUseBuyerJourney) {
+          const [favRes, inqRes, visRes] = await Promise.all([
+            favoriteAPI.getMy(),
+            inquiryAPI.getMy(),
+            visitAPI.getMy(),
+          ]);
+          setStats({
+            favorites: favRes.data.data?.length || 0,
+            inquiries: inqRes.data.data?.length || 0,
+            visits: visRes.data.data?.length || 0,
+          });
+        } else if (canManageLeads) {
+          const [propRes, inqRes, visRes] = await Promise.all([
+            propertyAPI.getAll({ limit: 100 }),
+            inquiryAPI.getReceived(),
+            visitAPI.getOwner(),
+          ]);
+          const listings = propRes.data.data || [];
+          const inquiries = inqRes.data.data || [];
+          const visits = visRes.data.data || [];
+          setStats({
+            listings: listings.length,
+            pendingListings: listings.filter(p => p.approvalStatus === 'Pending').length,
+            inquiries: inquiries.length,
+            pendingInquiries: inquiries.filter(i => i.status === 'Pending').length,
+            visits: visits.length,
+            pendingVisits: visits.filter(v => v.status === 'Requested').length,
+          });
+        } else if (isSupport) {
+          const ticketRes = await supportAPI.getAll();
+          setStats({ tickets: ticketRes.data.data?.length || 0 });
+        }
       } catch {}
       setLoading(false);
     };
     fetchStats();
-  }, []);
+  }, [canUseBuyerJourney, canManageLeads, isSupport, isAdmin]);
 
-  // Stat cards per role
-  const statCards = [
-    { label: 'Saved Properties', value: stats.favorites, icon: '❤️', link: '/dashboard/favorites', color: '#ef4444', show: !isSupport },
-    { label: 'My Inquiries',     value: stats.inquiries, icon: '💬', link: '/dashboard/inquiries', color: '#3b82f6', show: true },
-    { label: 'Visit Requests',   value: stats.visits,    icon: '📅', link: '/dashboard/visits',    color: '#10b981', show: !isSupport },
-    { label: 'Support Tickets',  value: 0,               icon: '🎫', link: '/dashboard/support',   color: '#f59e0b', show: true },
-  ].filter(s => s.show);
+  const statCards = (() => {
+    if (canUseBuyerJourney) {
+      return [
+        { label: 'Saved Properties', value: stats.favorites, icon: '❤️', link: '/dashboard/favorites', color: '#ef4444' },
+        { label: 'My Inquiries', value: stats.inquiries, icon: '💬', link: '/dashboard/inquiries', color: '#3b82f6' },
+        { label: 'Scheduled Visits', value: stats.visits, icon: '📅', link: '/dashboard/visits', color: '#10b981' },
+      ];
+    }
+    if (canManageLeads) {
+      return [
+        { label: isAdmin ? 'All Listings' : 'My Listings', value: stats.listings, icon: '🏘️', link: '/dashboard/my-properties', color: '#8b5cf6' },
+        { label: 'Pending Approval', value: stats.pendingListings, icon: '⏳', link: '/dashboard/my-properties', color: '#f59e0b' },
+        { label: isAgent ? 'Client Inquiries' : 'Received Inquiries', value: stats.inquiries, icon: '💬', link: '/dashboard/owner-inquiries', color: '#3b82f6' },
+        { label: 'Visit Requests', value: stats.visits, icon: '📋', link: '/dashboard/owner-visits', color: '#10b981' },
+      ];
+    }
+    if (isSupport) {
+      return [
+        { label: 'Support Tickets', value: stats.tickets, icon: '🎫', link: '/dashboard/support', color: '#6b7280' },
+      ];
+    }
+    return [];
+  })();
 
-  // Quick action links per role
   const quickLinks = [
-    { to: '/properties',              icon: '🔍', label: 'Browse Properties', show: true },
-    { to: '/dashboard/favorites',     icon: '❤️', label: 'Saved Properties',  show: !isSupport && !isAdmin },
-    { to: '/dashboard/inquiries',     icon: '💬', label: 'My Inquiries',       show: true },
-    { to: '/dashboard/visits',        icon: '📅', label: 'My Visits',          show: !isSupport },
-    { to: '/dashboard/payments',      icon: '💳', label: 'Payments',           show: !isSupport },
-    { to: '/dashboard/support',       icon: '🎫', label: 'Support Tickets',    show: true },
-    { to: '/dashboard/list-property', icon: '➕', label: 'List Property',      show: canListProperty, highlight: true },
-    { to: '/dashboard/my-properties', icon: '🏘️', label: 'My Listings',        show: canListProperty },
-    { to: '/dashboard/owner-inquiries', icon: '💬', label: 'Received Inquiries', show: canListProperty },
-    { to: '/dashboard/owner-visits',    icon: '📋', label: 'Visit Requests',     show: canListProperty },
-    { to: '/admin',                   icon: '⚙️', label: 'Admin Panel',        show: isAdmin, highlight: true },
+    { to: '/properties', icon: '🔍', label: 'Browse Properties', show: !isSupport },
+    { to: '/dashboard/favorites', icon: '❤️', label: 'Saved Properties', show: canUseBuyerJourney },
+    { to: '/dashboard/inquiries', icon: '💬', label: 'My Inquiries', show: canUseBuyerJourney },
+    { to: '/dashboard/visits', icon: '📅', label: 'My Visits', show: canUseBuyerJourney },
+    { to: '/dashboard/payments', icon: '💳', label: 'Payments', show: canUseBuyerJourney },
+    { to: '/dashboard/list-property', icon: '➕', label: 'List Property', show: canListProperty, highlight: true },
+    { to: '/dashboard/my-properties', icon: '🏘️', label: isAdmin ? 'All Listings' : 'My Listings', show: canManageLeads },
+    { to: '/dashboard/owner-inquiries', icon: '💬', label: isAgent ? 'Client Inquiries' : 'Received Inquiries', show: canManageLeads },
+    { to: '/dashboard/owner-visits', icon: '📋', label: 'Visit Requests', show: canManageLeads },
+    { to: '/dashboard/support', icon: '🎫', label: isSupport ? 'Support Desk' : 'Support Tickets', show: true },
+    { to: '/admin', icon: '⚙️', label: 'Admin Panel', show: isAdmin, highlight: true },
   ].filter(l => l.show);
 
   return (
@@ -83,7 +111,7 @@ export const DashboardOverview = () => {
               <span className="wb-role-badge" style={{ background: roleMeta.color }}>
                 {roleMeta.icon} {roleMeta.label}
               </span>
-              &nbsp; Here's a summary of your account activity.
+              &nbsp; {roleMeta.tagline}
             </p>
           </div>
         </div>
@@ -152,20 +180,19 @@ const BuyerInfo = () => (
 );
 const OwnerInfo = () => (
   <ul className="cap-list">
-    <li>✅ List unlimited properties for Sale or Rent</li>
-    <li>✅ Manage all your property listings</li>
+    <li>✅ List properties for Sale or Rent + manage leads</li>
+    <li>✅ Also browse, save & inquire on other properties (like a buyer)</li>
     <li>✅ Receive and respond to buyer inquiries</li>
-    <li>✅ Approve or reject visit requests</li>
-    <li>✅ Track property views and performance</li>
+    <li>✅ Approve or reject visit requests on your listings</li>
     <li>⏳ New listings require Admin approval before going live</li>
   </ul>
 );
 const AgentInfo = () => (
   <ul className="cap-list">
-    <li>✅ Post properties on behalf of owners</li>
-    <li>✅ Manage inquiries and visit requests</li>
-    <li>✅ Build your professional agent profile</li>
-    <li>✅ Access full buyer pipeline management</li>
+    <li>✅ List properties on behalf of property owners</li>
+    <li>✅ Manage client inquiries from your listings</li>
+    <li>✅ Approve or reject visit requests on your listings</li>
+    <li>✅ Professional agent dashboard (separate from buyer tools)</li>
     <li>⏳ New listings require Admin approval before going live</li>
   </ul>
 );

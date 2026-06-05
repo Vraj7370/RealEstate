@@ -6,6 +6,10 @@ const Property = require('../models/Property');
 // ─────────────────────────────────────────────
 exports.createInquiry = async (req, res) => {
   try {
+    if (!['BUYER', 'OWNER'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Only buyers and owners can send property inquiries' });
+    }
+
     const property = await Property.findById(req.params.propertyId)
       .populate('ownerId', 'firstName lastName email phone')
       .populate('agentId', 'firstName lastName email phone');
@@ -66,9 +70,11 @@ exports.getMyInquiries = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.getReceivedInquiries = async (req, res) => {
   try {
-    const filter = req.user.role === 'AGENT'
-      ? { agentId: req.user.id }   // agent sees inquiries on properties they manage
-      : { ownerId: req.user.id };  // owner sees inquiries on their properties
+    const filter = req.user.role === 'ADMIN'
+      ? {}
+      : req.user.role === 'AGENT'
+        ? { agentId: req.user.id }
+        : { ownerId: req.user.id };
 
     const inquiries = await Inquiry.find(filter)
       .populate('buyerId',    'firstName lastName email phone profilePic city')

@@ -35,14 +35,21 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-/** OWNER, AGENT, ADMIN */
-const OwnerRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+/** Listings & leads — OWNER, AGENT, ADMIN */
+const ListerRoute = ({ children }) => {
+  const { user, loading, canManageLeads } = useAuth();
   if (loading) return <Loader />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!['OWNER', 'AGENT', 'ADMIN'].includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  if (!canManageLeads) return <Navigate to="/dashboard" replace />;
+  return children;
+};
+
+/** Buyer journey — BUYER & OWNER (search, save, inquire, visit) */
+const BuyerRoute = ({ children }) => {
+  const { user, loading, canUseBuyerJourney } = useAuth();
+  if (loading) return <Loader />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!canUseBuyerJourney) return <Navigate to="/dashboard" replace />;
   return children;
 };
 
@@ -115,17 +122,17 @@ const App = () => (
         >
           <Route index                element={<DashboardOverview />} />
           <Route path="profile"       element={<Profile />} />
-          <Route path="favorites"     element={<MyFavorites />} />
-          <Route path="inquiries"     element={<MyInquiries />} />
-          <Route path="visits"        element={<MyVisits />} />
-          <Route path="payments"      element={<MyPayments />} />
+          <Route path="favorites"     element={<BuyerRoute><MyFavorites /></BuyerRoute>} />
+          <Route path="inquiries"     element={<BuyerRoute><MyInquiries /></BuyerRoute>} />
+          <Route path="visits"        element={<BuyerRoute><MyVisits /></BuyerRoute>} />
+          <Route path="payments"      element={<BuyerRoute><MyPayments /></BuyerRoute>} />
           <Route path="support"       element={<SupportTickets />} />
 
-          {/* Owner / Agent / Admin only */}
-          <Route path="list-property" element={<OwnerRoute><ListProperty /></OwnerRoute>} />
-          <Route path="my-properties" element={<OwnerRoute><MyProperties /></OwnerRoute>} />
-          <Route path="owner-visits"  element={<OwnerRoute><OwnerVisits /></OwnerRoute>} />
-          <Route path="owner-inquiries" element={<OwnerRoute><ReceivedInquiries /></OwnerRoute>} />
+          {/* Lister / Agent / Admin workspace */}
+          <Route path="list-property" element={<ListerRoute><ListProperty /></ListerRoute>} />
+          <Route path="my-properties" element={<ListerRoute><MyProperties /></ListerRoute>} />
+          <Route path="owner-visits"  element={<ListerRoute><OwnerVisits /></ListerRoute>} />
+          <Route path="owner-inquiries" element={<ListerRoute><ReceivedInquiries /></ListerRoute>} />
         </Route>
 
         {/* ── Admin Panel ── */}

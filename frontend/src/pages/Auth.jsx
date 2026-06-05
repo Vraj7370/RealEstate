@@ -497,7 +497,7 @@ const ROLES = [
     role: 'AGENT', icon: '🤝', title: 'Real Estate Agent',
     desc: 'Professional agent / broker',
     color: '#3b82f6',
-    perks: ['Post properties for owners', 'Manage client pipeline', 'Build your agent profile', 'Access full buyer leads'],
+    perks: ['List properties for clients', 'Manage inquiries & visits', 'Agent workspace dashboard', 'Build your broker profile'],
   },
 ];
 

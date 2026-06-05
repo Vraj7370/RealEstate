@@ -91,7 +91,7 @@ const EMICalculator = ({ price }) => {
 // ── Main Component ─────────────────────────────────────────
 const PropertyDetail = () => {
   const { id }     = useParams();
-  const { user }   = useAuth();
+  const { user, permissions } = useAuth();
   const navigate   = useNavigate();
 
   const [property,     setProperty]     = useState(null);
@@ -141,6 +141,7 @@ const PropertyDetail = () => {
 
   const handleFavorite = async () => {
     if (!user) { toast.error('Please sign in to save properties'); return; }
+    if (!permissions.canSaveFavorites) { toast.error('Save properties is available for buyers and owners'); return; }
     try {
       const { data } = await favoriteAPI.toggle(id);
       setIsFav(data.isFavorited);
@@ -491,7 +492,7 @@ const PropertyDetail = () => {
 
             {/* Actions */}
             <div className="sidebar-actions">
-              {!isOwnProperty && property.status === 'Available' ? (
+              {!isOwnProperty && permissions.canUseBuyerJourney && property.status === 'Available' ? (
                 <>
                   <button
                     className="btn btn-primary btn-block btn-lg"
@@ -514,7 +515,7 @@ const PropertyDetail = () => {
                 </div>
               ) : null}
 
-              {!isOwnProperty && (
+              {!isOwnProperty && permissions.canSaveFavorites && (
                 <button
                   className={`btn btn-block ${isFav ? 'btn-gold' : 'btn-ghost'}`}
                   style={{ border: '1.5px solid', borderColor: isFav ? 'var(--gold)' : 'var(--border)' }}

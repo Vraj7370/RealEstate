@@ -8,8 +8,16 @@ const User = require('../models/User');
 // ===== VISIT CONTROLLERS =====
 exports.scheduleVisit = async (req, res) => {
   try {
+    if (!['BUYER', 'OWNER'].includes(req.user.role)) {
+      return res.status(403).json({ success: false, message: 'Only buyers and owners can schedule property visits' });
+    }
+
     const property = await Property.findById(req.params.propertyId);
     if (!property) return res.status(404).json({ success: false, message: 'Property not found' });
+
+    if (property.ownerId.toString() === req.user.id) {
+      return res.status(400).json({ success: false, message: "You can't schedule a visit on your own property" });
+    }
 
     const visit = await Visit.create({
       propertyId: req.params.propertyId,
@@ -47,11 +55,13 @@ exports.updateVisitStatus = async (req, res) => {
     if (!visit) return res.status(404).json({ success: false, message: 'Visit not found' });
 
     // Authorization: buyer can only cancel their own visit, owner/agent can approve/reject/complete
+    const property = await Property.findById(visit.propertyId);
     const isBuyer = visit.buyerId.toString() === req.user.id;
     const isOwner = visit.ownerId.toString() === req.user.id;
+    const isAgent = property?.agentId?.toString() === req.user.id;
     const isAdmin = req.user.role === 'ADMIN';
 
-    if (!isBuyer && !isOwner && !isAdmin) {
+    if (!isBuyer && !isOwner && !isAgent && !isAdmin) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this visit' });
     }
 
@@ -70,7 +80,16 @@ exports.updateVisitStatus = async (req, res) => {
 
 exports.getOwnerVisits = async (req, res) => {
   try {
-    const visits = await Visit.find({ ownerId: req.user.id })
+    let filter = { ownerId: req.user.id };
+
+    if (req.user.role === 'AGENT') {
+      const managed = await Property.find({ agentId: req.user.id }).select('_id');
+      filter = { propertyId: { $in: managed.map(p => p._id) } };
+    } else if (req.user.role === 'ADMIN') {
+      filter = {};
+    }
+
+    const visits = await Visit.find(filter)
       .populate('propertyId', 'title location')
       .populate('buyerId', 'firstName lastName phone email profilePic')
       .sort('-visitDate');
